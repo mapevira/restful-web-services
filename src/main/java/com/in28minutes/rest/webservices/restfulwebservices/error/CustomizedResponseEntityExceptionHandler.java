@@ -1,8 +1,11 @@
 package com.in28minutes.rest.webservices.restfulwebservices.error;
 import java.time.LocalDateTime;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -11,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import com.in28minutes.rest.webservices.restfulwebservices.user.UserNotFoundException;
 
 @ControllerAdvice
-public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExceptionHandler{
+public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public final ResponseEntity<ErrorDetails> handleAllExceptions(Exception ex, WebRequest request) {
@@ -27,6 +30,22 @@ public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExce
                 ex.getMessage(), request.getDescription(false));
 
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+
+    @Override
+    public ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+
+        final String msg = new StringBuilder()
+                .append("Total Errors: ")
+                .append(ex.getErrorCount())
+                .append(" First Error: ")
+                .append(ex.getFieldError().getDefaultMessage())
+                .toString();
+
+        ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), msg, request.getDescription(false));
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
 }
